@@ -9,10 +9,15 @@ import { JwtPayload } from "jsonwebtoken";
 const createUser = async (payload: Partial<IUser>) => {
   const { email, password, ...rest } = payload;
 
-  const isUserExist = await User.findOne({ email });
+  const existingUser = await User.findOne({
+    $or: [{ email }, { phone: payload.phone }],
+  });
 
-  if (isUserExist) {
-    throw new AppError(httpStatus.BAD_REQUEST, "user already exist");
+  if (existingUser) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "User with email or phone already exists"
+    );
   }
 
   const hashedPassword = await bcryptjs.hash(

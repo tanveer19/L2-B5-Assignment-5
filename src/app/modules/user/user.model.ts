@@ -3,8 +3,8 @@ import { IAuthProvider, IsActive, IUser, Role } from "./user.interface";
 
 const authProviderSchema = new Schema<IAuthProvider>(
   {
-    provider: { type: String, required: true },
-    providerId: { type: String, required: true },
+    provider: { type: String, required: false },
+    providerId: { type: String, required: false },
   },
   {
     versionKey: false,
@@ -15,14 +15,14 @@ const authProviderSchema = new Schema<IAuthProvider>(
 const userSchema = new Schema<IUser>(
   {
     name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
+    email: { type: String },
     password: { type: String },
     role: {
       type: String,
       enum: Object.values(Role),
       default: Role.USER,
     },
-    phone: { type: String },
+    phone: { type: String, required: true },
     picture: { type: String },
     address: { type: String },
     isDeleted: { type: Boolean, default: false },

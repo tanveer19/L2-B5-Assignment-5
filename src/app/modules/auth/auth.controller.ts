@@ -8,51 +8,57 @@ import { setAuthCookie } from "../../utils/setCookie";
 import { createUserTokens } from "../../utils/userTokens";
 import { envVars } from "../../config/env";
 import { JwtPayload } from "jsonwebtoken";
-import passport from "passport";
 
 const credentialsLogin = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    // const loginInfo = await AuthServices.credentialsLogin(req.body);
+    const { phoneNumber, password } = req.body;
 
-    passport.authenticate("local", async (err: any, user: any, info: any) => {
-      if (err) {
-        return next(new AppError(401, err));
-      }
+    // Basic input validation
+    if (!phoneNumber || !password) {
+      throw new AppError(400, "Phone number and password are required");
+    }
 
-      if (!user) {
-        return next(new AppError(401, info.message));
-      }
+    // Find user by phone number
+    const user = await AuthServices.findUserByPhone(phoneNumber);
+    if (!user) {
+      throw new AppError(401, "User not found");
+    }
+    // Ensure password field is available
+    if (!user.password) {
+      throw new AppError(500, "User password is missing");
+    }
+    // Check if password matches
+    const isMatch = await AuthServices.comparePasswords(
+      password,
+      user.password
+    );
+    if (!isMatch) {
+      throw new AppError(401, "Invalid credentials");
+    }
 
-      const userTokens = await createUserTokens(user);
-      // delete user.toObject().password;
+    // Generate access + refresh tokens
+    const userTokens = await createUserTokens(user);
 
-      const { password: pass, ...rest } = user.toObject();
+    // Remove password from response
+    const { password: _, ...rest } = user.toObject();
 
-      setAuthCookie(res, userTokens);
+    // Set cookies
+    setAuthCookie(res, userTokens);
 
-      sendResponse(res, {
-        success: true,
-        statusCode: httpStatus.OK,
-        message: "User Logged in successfully",
-        data: {
-          accessToken: userTokens.accessToken,
-          refreshToken: userTokens.refreshToken,
-          user: rest,
-        },
-      });
-    })(req, res, next);
-
-    // res.cookie("accessToken", loginInfo.accessToken, {
-    //   httpOnly: true,
-    //   secure: false,
-    // });
-
-    // res.cookie("refreshToken", loginInfo.refreshToken, {
-    //   httpOnly: true,
-    //   secure: false,
-    // });
+    // Send success response
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "User logged in successfully",
+      data: {
+        accessToken: userTokens.accessToken,
+        refreshToken: userTokens.refreshToken,
+        user: rest,
+      },
+    });
   }
 );
+
 const getNewAccessToken = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const refreshToken = req.cookies.refreshToken;
@@ -64,10 +70,6 @@ const getNewAccessToken = catchAsync(
       refreshToken as string
     );
 
-    // res.cookie("accessToken", tokenInfo.accessToken, {
-    //   httpOnly: true,
-    //   secure: false,
-    // });
     setAuthCookie(res, tokenInfo);
 
     sendResponse(res, {
@@ -105,10 +107,6 @@ const resetPassword = catchAsync(
     const oldPassword = req.body.oldPassword;
     const decodedToken = req.user;
 
-    // if (!decodedToken) {
-    //   throw new AppError(httpStatus.UNAUTHORIZED, "User token not found");
-    // }
-
     await AuthServices.resetPassword(
       oldPassword,
       newPassword,
@@ -123,37 +121,10 @@ const resetPassword = catchAsync(
     });
   }
 );
-const googleCallbackController = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    let redirectTo = req.query.state ? (req.query.state as string) : "";
-    if (redirectTo.startsWith("/")) {
-      redirectTo = redirectTo.slice(1);
-    }
-
-    const user = req.user;
-    console.log("user", user);
-
-    if (!user) {
-      throw new AppError(httpStatus.NOT_FOUND, "user not found");
-    }
-    const tokenInfo = createUserTokens(user);
-    setAuthCookie(res, tokenInfo);
-
-    // sendResponse(res, {
-    //   success: true,
-    //   statusCode: httpStatus.OK,
-    //   message: "password changed successfully",
-    //   data: null,
-    // });
-
-    res.redirect(`${envVars.FRONTEND_URL}/${redirectTo}`);
-  }
-);
 
 export const AuthControllers = {
   credentialsLogin,
   getNewAccessToken,
   logout,
   resetPassword,
-  googleCallbackController,
 };

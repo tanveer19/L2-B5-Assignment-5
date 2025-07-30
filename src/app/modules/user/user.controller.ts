@@ -8,34 +8,9 @@ import { verifyToken } from "../../utils/jwt";
 import { envVars } from "../../config/env";
 import { JwtPayload } from "jsonwebtoken";
 
-// const createUserFunction = ()=>{
-//   const user = await UserServices.createUser(req.body);
-
-//     res.status(httpStatus.CREATED).json({
-//       message: "User created successfully",
-//       user,
-//     });
-// }
-
-// const createUser = async (req: Request, res: Response, next: NextFunction) => {
-//   try {
-//     // throw new Error("fake error");
-//     // throw new AppError(httpStatus.BAD_REQUEST, "fake error");
-
-//   } catch (err: any) {
-//     console.log(err);
-//     next(err);
-//   }
-// };
-
 const createUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const user = await UserServices.createUser(req.body);
-
-    // res.status(httpStatus.CREATED).json({
-    //   message: "User created successfully",
-    //   user,
-    // });
 
     sendResponse(res, {
       success: true,
