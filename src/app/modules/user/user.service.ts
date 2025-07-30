@@ -7,16 +7,21 @@ import { envVars } from "../../config/env";
 import { JwtPayload } from "jsonwebtoken";
 
 const createUser = async (payload: Partial<IUser>) => {
-  const { email, password, ...rest } = payload;
+  const { phone, password, email, ...rest } = payload;
 
-  const existingUser = await User.findOne({
-    $or: [{ email }, { phone: payload.phone }],
-  });
+  if (!phone || !password) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Phone and password are required"
+    );
+  }
+
+  const existingUser = await User.findOne({ phone });
 
   if (existingUser) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      "User with email or phone already exists"
+      "User with phone already exists"
     );
   }
 
@@ -27,11 +32,11 @@ const createUser = async (payload: Partial<IUser>) => {
 
   const authProvider: IAuthProvider = {
     provider: "credentials",
-    providerId: email as string,
+    providerId: email ? email : phone,
   };
 
   const user = await User.create({
-    email,
+    phone,
     password: hashedPassword,
     auths: [authProvider],
     ...rest,
