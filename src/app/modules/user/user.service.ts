@@ -5,14 +5,23 @@ import httpStatus from "http-status-codes";
 import bcryptjs from "bcryptjs";
 import { envVars } from "../../config/env";
 import { JwtPayload } from "jsonwebtoken";
+import { Wallet } from "../wallet/wallet.model";
 
 const createUser = async (payload: Partial<IUser>) => {
-  const { phone, password, email, ...rest } = payload;
+  const { phone, password, email, role, ...rest } = payload;
 
-  if (!phone || !password) {
+  if (!phone || !password || !role) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      "Phone and password are required"
+      "Phone, password, and role are required"
+    );
+  }
+
+  // ✅ Only USER or AGENT allowed
+  if (![Role.USER, Role.AGENT].includes(role)) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Only USER or AGENT role can register via API"
     );
   }
 
@@ -37,10 +46,17 @@ const createUser = async (payload: Partial<IUser>) => {
 
   const user = await User.create({
     phone,
+    role,
     password: hashedPassword,
     auths: [authProvider],
     ...rest,
   });
+
+  // ✅ Create wallet and update user with wallet reference
+  const wallet = await Wallet.create({ user: user._id });
+  user.wallet = wallet._id;
+  await user.save();
+
   return user;
 };
 
@@ -86,7 +102,7 @@ const updateUser = async (
 };
 
 const getAllUsers = async () => {
-  const users = await User.find({});
+  const users = await User.find({}).populate("wallet");
 
   const totalUsers = await User.countDocuments();
   return {

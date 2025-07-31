@@ -33,6 +33,7 @@ const userSchema = new Schema<IUser>(
     },
     isVerified: { type: Boolean, default: false },
     auths: [authProviderSchema],
+    wallet: { type: Schema.Types.ObjectId, ref: "Wallet" },
   },
   {
     timestamps: true,

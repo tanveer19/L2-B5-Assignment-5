@@ -2,7 +2,7 @@ import { z } from "zod";
 import { IsActive, Role } from "./user.interface";
 
 // Assuming Role = 'admin' | 'user' | 'agent' and IsActive = 'active' | 'inactive'
-const RoleEnum = z.enum(["admin", "user", "agent"]);
+const RoleEnum = z.enum(["ADMIN", "USER", "AGENT"]);
 const IsActiveEnum = z.enum(["active", "inactive"]);
 
 export const updateUserZodSchema = z.object({
@@ -37,7 +37,6 @@ export const updateUserZodSchema = z.object({
 
   role: RoleEnum.optional(),
   IsActive: IsActiveEnum.optional(),
-
   isDeleted: z.boolean().optional(),
   isVerified: z.boolean().optional(),
 
@@ -71,6 +70,8 @@ export const createUserZodSchema = z.object({
   phone: z.string().regex(/^01[0-9]{9}$/, {
     message: "Phone must be a valid 11-digit BD number starting with 01",
   }),
+
+  role: RoleEnum.optional(),
 
   address: z
     .string()
