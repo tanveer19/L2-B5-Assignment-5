@@ -57,7 +57,8 @@ const createUser = async (payload: Partial<IUser>) => {
   user.wallet = wallet._id;
   await user.save();
 
-  return user;
+  const createdUser = await User.findById(user._id).populate("wallet");
+  return createdUser;
 };
 
 const updateUser = async (
@@ -102,9 +103,13 @@ const updateUser = async (
 };
 
 const getAllUsers = async () => {
-  const users = await User.find({}).populate("wallet");
+  const users = await User.find({}).populate({
+    path: "wallet",
+    select: "balance createdAt updatedAt", // show what you need
+  });
 
   const totalUsers = await User.countDocuments();
+
   return {
     data: users,
     meta: {
