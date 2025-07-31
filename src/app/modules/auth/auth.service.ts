@@ -11,8 +11,8 @@ import {
 } from "../../utils/userTokens";
 import { JwtPayload } from "jsonwebtoken";
 
-const findUserByPhone = async (phoneNumber: string) => {
-  return await User.findOne({ phoneNumber });
+const findUserByPhone = async (phone: string) => {
+  return await User.findOne({ phone });
 };
 
 const comparePasswords = async (inputPassword: string, storedHash: string) => {

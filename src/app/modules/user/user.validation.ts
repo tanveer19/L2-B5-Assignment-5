@@ -68,12 +68,9 @@ export const createUserZodSchema = z.object({
       message: "password must contain at least 1 number",
     }),
 
-  phone: z
-    .string()
-    .regex(/^(?:\+8801\d{9}|01\d{9})$/, {
-      message: "Phone must be a valid BD number",
-    })
-    .optional(),
+  phone: z.string().regex(/^01[0-9]{9}$/, {
+    message: "Phone must be a valid 11-digit BD number starting with 01",
+  }),
 
   address: z
     .string()

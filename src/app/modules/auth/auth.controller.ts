@@ -11,15 +11,16 @@ import { JwtPayload } from "jsonwebtoken";
 
 const credentialsLogin = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { phoneNumber, password } = req.body;
+    const { phone, password } = req.body;
 
     // Basic input validation
-    if (!phoneNumber || !password) {
+    if (!phone || !password) {
       throw new AppError(400, "Phone number and password are required");
     }
+    console.log("Login phone:", phone);
 
     // Find user by phone number
-    const user = await AuthServices.findUserByPhone(phoneNumber);
+    const user = await AuthServices.findUserByPhone(phone);
     if (!user) {
       throw new AppError(401, "User not found");
     }
@@ -27,6 +28,9 @@ const credentialsLogin = catchAsync(
     if (!user.password) {
       throw new AppError(500, "User password is missing");
     }
+    console.log("Entered password:", password);
+    console.log("Stored hash:", user.password);
+
     // Check if password matches
     const isMatch = await AuthServices.comparePasswords(
       password,
