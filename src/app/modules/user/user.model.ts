@@ -1,5 +1,22 @@
-import { model, Schema } from "mongoose";
-import { IAuthProvider, IsActive, IUser, Role } from "./user.interface";
+import { model, Schema, Types, Document } from "mongoose";
+import { IAuthProvider, IsActive, Role } from "./user.interface";
+
+export interface IUser extends Document {
+  name: string;
+  email?: string;
+  password: string;
+  role: Role;
+  phone: string;
+  picture?: string;
+  address?: string;
+  isDeleted: boolean;
+  isActive: IsActive;
+  isVerified: boolean;
+  auths: IAuthProvider[];
+  wallet?: Types.ObjectId; // or populated Wallet type
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 const authProviderSchema = new Schema<IAuthProvider>(
   {
@@ -16,13 +33,13 @@ const userSchema = new Schema<IUser>(
   {
     name: { type: String, required: true },
     email: { type: String },
-    password: { type: String },
+    password: { type: String, required: true },
     role: {
       type: String,
       enum: Object.values(Role),
       default: Role.USER,
     },
-    phone: { type: String, required: true },
+    phone: { type: String, required: true, unique: true },
     picture: { type: String },
     address: { type: String },
     isDeleted: { type: Boolean, default: false },

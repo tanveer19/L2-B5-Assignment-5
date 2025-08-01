@@ -36,11 +36,8 @@ export const checkAuth =
         envVars.JWT_ACCESS_SECRET
       ) as JwtPayload;
 
-      console.log("Verified Token:", verifiedToken);
-
       // Check user in DB
       const isUserExist = await User.findById(verifiedToken.userId);
-      console.log("User Found:", isUserExist);
 
       if (!isUserExist) {
         throw new AppError(httpStatus.BAD_REQUEST, "User does not exist");

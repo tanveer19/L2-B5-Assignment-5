@@ -1,14 +1,29 @@
 import { Schema, model, Types } from "mongoose";
 
-const transactionSchema = new Schema(
+export interface ITransaction {
+  from: Types.ObjectId | null; // null for system credits
+  to: Types.ObjectId;
+  amount: number;
+  type: "SEND" | "RECEIVE" | "CREDIT" | "DEBIT";
+  timestamp: Date;
+}
+
+const transactionSchema = new Schema<ITransaction>(
   {
-    type: { type: String, enum: ["TOPUP", "WITHDRAW", "SEND"], required: true },
-    from: { type: Types.ObjectId, ref: "User" },
-    to: { type: Types.ObjectId, ref: "User" },
+    from: { type: Schema.Types.ObjectId, ref: "Wallet", default: null },
+    to: { type: Schema.Types.ObjectId, ref: "Wallet", required: true },
     amount: { type: Number, required: true },
+    type: {
+      type: String,
+      enum: ["SEND", "RECEIVE", "CREDIT", "DEBIT"],
+      required: true,
+    },
     timestamp: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );
 
-export const Transaction = model("Transaction", transactionSchema);
+export const Transaction = model<ITransaction>(
+  "Transaction",
+  transactionSchema
+);

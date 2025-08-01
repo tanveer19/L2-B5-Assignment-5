@@ -1,8 +1,28 @@
-import { Schema, model, Types } from "mongoose";
+import { Schema, model, Types, Document } from "mongoose";
 
-const walletSchema = new Schema({
-  user: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  balance: { type: Number, default: 50 }, // initial ৳50
-});
+export interface IWallet extends Document {
+  balance: number;
+  user: Types.ObjectId;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
-export const Wallet = model("Wallet", walletSchema);
+const walletSchema = new Schema<IWallet>(
+  {
+    balance: {
+      type: Number,
+      default: 0,
+      required: true,
+    },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+export const Wallet = model<IWallet>("Wallet", walletSchema);

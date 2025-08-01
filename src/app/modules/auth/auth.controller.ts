@@ -17,7 +17,6 @@ const credentialsLogin = catchAsync(
     if (!phone || !password) {
       throw new AppError(400, "Phone number and password are required");
     }
-    console.log("Login phone:", phone);
 
     // Find user by phone number
     const user = await AuthServices.findUserByPhone(phone);
@@ -28,8 +27,6 @@ const credentialsLogin = catchAsync(
     if (!user.password) {
       throw new AppError(500, "User password is missing");
     }
-    console.log("Entered password:", password);
-    console.log("Stored hash:", user.password);
 
     // Check if password matches
     const isMatch = await AuthServices.comparePasswords(
