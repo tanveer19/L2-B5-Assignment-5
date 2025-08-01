@@ -1,13 +1,33 @@
-import express from "express";
+import { Router } from "express";
 import { WalletController } from "./wallet.controller";
-import { auth } from "../auth/auth.middleware"; // adjust path as needed
+import { checkAuth } from "../../middlewares/checkAuth";
+import { Role } from "../user/user.interface";
 
-const router = express.Router();
+const router = Router();
 
-// All routes below require authenticated users
-router.post("/add-money", auth(), WalletController.addMoney);
-router.post("/withdraw", auth(), WalletController.withdrawMoney);
-router.post("/send", auth(), WalletController.sendMoney);
-router.get("/transactions", auth(), WalletController.getTransactionHistory);
+// All users with 'USER' or 'AGENT' role can use wallet functions
+router.post(
+  "/add-money",
+  checkAuth(Role.USER, Role.AGENT),
+  WalletController.addMoney
+);
+
+router.post(
+  "/withdraw",
+  checkAuth(Role.USER, Role.AGENT),
+  WalletController.withdrawMoney
+);
+
+router.post(
+  "/send",
+  checkAuth(Role.USER, Role.AGENT),
+  WalletController.sendMoney
+);
+
+router.get(
+  "/transactions",
+  checkAuth(Role.USER, Role.AGENT),
+  WalletController.getTransactionHistory
+);
 
 export const WalletRoutes = router;

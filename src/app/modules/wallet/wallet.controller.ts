@@ -1,62 +1,130 @@
 import { Request, Response, NextFunction } from "express";
-import { WalletServices } from "./wallet.service";
-import { sendResponse } from "../../utils/sendResponse";
+import { Wallet } from "./wallet.model"; // assuming you have a wallet model
 import httpStatus from "http-status-codes";
-import { catchAsync } from "../../utils/catchAsync";
+import AppError from "../../errorHelpers/AppError";
+import { Transaction } from "../transaction/transaction.model";
+import { User } from "../user/user.model";
 
 export const WalletController = {
-  addMoney: catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user?._id; // assuming you have req.user set by auth middleware
-    const { amount } = req.body;
+  addMoney: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = (req.user as { userId: string }).userId;
 
-    const wallet = await WalletServices.addMoney(userId, amount);
+      const user = await User.findById(userId);
+      if (!user || !user.wallet) {
+        throw new AppError(httpStatus.NOT_FOUND, "User or wallet not found");
+      }
 
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: "Money added successfully",
-      data: wallet,
-    });
-  }),
+      const wallet = await Wallet.findById(user.wallet);
+      if (!wallet) {
+        throw new AppError(httpStatus.NOT_FOUND, "Wallet not found");
+      }
 
-  withdrawMoney: catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user?._id;
-    const { amount } = req.body;
+      const amount = Number(req.body.amount);
+      if (!amount || amount <= 0) {
+        throw new AppError(httpStatus.BAD_REQUEST, "Invalid amount");
+      }
 
-    const wallet = await WalletServices.withdrawMoney(userId, amount);
+      wallet.balance += amount;
+      await wallet.save();
 
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: "Withdrawal successful",
-      data: wallet,
-    });
-  }),
+      res.status(httpStatus.OK).json({
+        success: true,
+        message: "Money added successfully",
+        data: {
+          balance: wallet.balance,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 
-  sendMoney: catchAsync(async (req: Request, res: Response) => {
-    const fromId = req.user?._id;
-    const { toPhone, amount } = req.body;
+  withdrawMoney: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      console.log("▶️ Withdraw Money called");
+      const { amount } = req.body;
+      const user = req.user;
 
-    const result = await WalletServices.sendMoney(fromId, toPhone, amount);
+      if (!user)
+        throw new AppError(httpStatus.UNAUTHORIZED, "User not authenticated");
 
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: "Money sent successfully",
-      data: result,
-    });
-  }),
+      const wallet = await Wallet.findOne({ userId: user.userId });
+      if (!wallet) throw new AppError(httpStatus.NOT_FOUND, "Wallet not found");
 
-  getTransactionHistory: catchAsync(async (req: Request, res: Response) => {
-    const userId = req.user?._id;
+      if (wallet.balance < amount) {
+        throw new AppError(httpStatus.BAD_REQUEST, "Insufficient balance");
+      }
 
-    const transactions = await WalletServices.getTransactionHistory(userId);
+      wallet.balance -= amount;
+      await wallet.save();
 
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: "Transaction history retrieved successfully",
-      data: transactions,
-    });
-  }),
+      res.status(httpStatus.OK).json({
+        success: true,
+        message: "Money withdrawn successfully",
+        data: wallet,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  sendMoney: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      console.log("▶️ Send Money called");
+      const { toPhone, amount } = req.body;
+      const user = req.user;
+
+      if (!user)
+        throw new AppError(httpStatus.UNAUTHORIZED, "User not authenticated");
+
+      const senderWallet = await Wallet.findOne({ userId: user.userId });
+      if (!senderWallet)
+        throw new AppError(httpStatus.NOT_FOUND, "Sender wallet not found");
+
+      if (senderWallet.balance < amount) {
+        throw new AppError(httpStatus.BAD_REQUEST, "Insufficient balance");
+      }
+
+      const receiverWallet = await Wallet.findOne({ phone: toPhone });
+      if (!receiverWallet)
+        throw new AppError(httpStatus.NOT_FOUND, "Receiver wallet not found");
+
+      senderWallet.balance -= amount;
+      receiverWallet.balance += amount;
+
+      await senderWallet.save();
+      await receiverWallet.save();
+
+      res.status(httpStatus.OK).json({
+        success: true,
+        message: "Money sent successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  getTransactionHistory: async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      console.log("▶️ Get Transactions called");
+      const user = req.user;
+
+      if (!user)
+        throw new AppError(httpStatus.UNAUTHORIZED, "User not authenticated");
+
+      const transactions = await Transaction.find({ userId: user.userId });
+
+      res.status(httpStatus.OK).json({
+        success: true,
+        data: transactions,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 };
