@@ -30,6 +30,14 @@ export const WalletController = {
       wallet.balance += amount;
       await wallet.save();
 
+      await Transaction.create({
+        type: "ADD",
+        from: null,
+        to: userId,
+        amount,
+        timestamp: new Date(),
+      });
+
       res.status(httpStatus.OK).json({
         success: true,
         message: "Money added successfully",
@@ -63,6 +71,14 @@ export const WalletController = {
 
       wallet.balance -= amount;
       await wallet.save();
+
+      await Transaction.create({
+        type: "WITHDRAW",
+        from: userId,
+        to: null,
+        amount,
+        timestamp: new Date(),
+      });
 
       res.status(httpStatus.OK).json({
         success: true,

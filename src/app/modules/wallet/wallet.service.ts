@@ -14,12 +14,23 @@ const addMoney = async (userId: string, amount: number) => {
     { new: true }
   );
 
-  await Transaction.create({ type: "TOPUP", to: userId, amount });
+  if (!wallet) {
+    throw new AppError(httpStatus.NOT_FOUND, "Wallet not found");
+  }
+
+  await Transaction.create({
+    type: "ADD", // ✅ Fix: match enum
+    to: userId,
+    amount,
+    timestamp: new Date(),
+  });
 
   return wallet;
 };
 
 const withdrawMoney = async (userId: string, amount: number) => {
+  if (amount <= 0) throw new AppError(httpStatus.BAD_REQUEST, "Invalid amount");
+
   const wallet = await Wallet.findOne({ user: userId });
 
   if (!wallet || wallet.balance < amount) {
@@ -29,12 +40,21 @@ const withdrawMoney = async (userId: string, amount: number) => {
   wallet.balance -= amount;
   await wallet.save();
 
-  await Transaction.create({ type: "WITHDRAW", from: userId, amount });
+  await Transaction.create({
+    type: "WITHDRAW",
+    from: userId,
+    amount,
+    timestamp: new Date(),
+  });
 
   return wallet;
 };
 
 const sendMoney = async (fromId: string, toPhone: string, amount: number) => {
+  if (amount <= 0) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Invalid transfer amount");
+  }
+
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -70,6 +90,7 @@ const sendMoney = async (fromId: string, toPhone: string, amount: number) => {
           from: fromId,
           to: recipientWallet.user._id,
           amount,
+          timestamp: new Date(),
         },
       ],
       { session }
@@ -88,7 +109,10 @@ const sendMoney = async (fromId: string, toPhone: string, amount: number) => {
 const getTransactionHistory = async (userId: string) => {
   return Transaction.find({
     $or: [{ from: userId }, { to: userId }],
-  }).sort({ createdAt: -1 });
+  })
+    .populate("from", "phone")
+    .populate("to", "phone")
+    .sort({ createdAt: -1 });
 };
 
 export const WalletServices = {
