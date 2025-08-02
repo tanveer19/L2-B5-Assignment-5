@@ -6,6 +6,7 @@ import cors from "cors";
 import { UserRoutes } from "./app/modules/user/user.route";
 import { AuthRoutes } from "./app/modules/auth/auth.route";
 import { WalletRoutes } from "./app/modules/wallet/wallet.route";
+import { AgentRoutes } from "./app/modules/agent/agent.route";
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use(cors());
 app.use("/api/v1/user", UserRoutes);
 app.use("/api/v1/auth", AuthRoutes);
 app.use("/api/v1/wallet", WalletRoutes);
+app.use("/api/v1/agent", AgentRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({
