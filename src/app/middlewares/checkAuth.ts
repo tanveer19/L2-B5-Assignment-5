@@ -7,15 +7,6 @@ import { User } from "../modules/user/user.model";
 import httpStatus from "http-status-codes";
 import { IsActive } from "../modules/user/user.interface";
 
-// Extend Express Request to include user
-// declare global {
-//   namespace Express {
-//     interface Request {
-//       user?: JwtPayload;
-//     }
-//   }
-// }
-
 export const checkAuth =
   (...authRoles: string[]) =>
   async (req: Request, res: Response, next: NextFunction) => {

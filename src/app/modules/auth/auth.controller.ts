@@ -38,7 +38,7 @@ const credentialsLogin = catchAsync(
     }
 
     // Generate access + refresh tokens
-    const userTokens = await createUserTokens(user);
+    const userTokens = await createUserTokens(user as IUser);
 
     // Remove password from response
     const { password: _, ...rest } = user.toObject();
