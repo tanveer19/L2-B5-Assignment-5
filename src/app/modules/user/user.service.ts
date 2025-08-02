@@ -6,6 +6,8 @@ import bcryptjs from "bcryptjs";
 import { envVars } from "../../config/env";
 import { JwtPayload } from "jsonwebtoken";
 import { Wallet } from "../wallet/wallet.model";
+import { Transaction } from "../transaction/transaction.model";
+import mongoose from "mongoose";
 
 const createUser = async (payload: Partial<IUser>) => {
   const { phone, password, email, role, ...rest } = payload;
@@ -52,10 +54,17 @@ const createUser = async (payload: Partial<IUser>) => {
     ...rest,
   });
 
-  // ✅ Create wallet and update user with wallet reference
-  const wallet = await Wallet.create({ user: user._id });
-  user.wallet = wallet._id;
+  // ✅ Create wallet with initial balance ৳50
+  const wallet = await Wallet.create({ user: user._id, balance: 50 });
+  user.wallet = wallet._id as mongoose.Types.ObjectId;
   await user.save();
+
+  // ✅ Optional: Log top-up transaction
+  await Transaction.create({
+    type: "ADD",
+    to: user._id,
+    amount: 50,
+  });
 
   const createdUser = await User.findById(user._id).populate("wallet");
   return createdUser;
