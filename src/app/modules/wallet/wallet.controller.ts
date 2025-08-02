@@ -148,19 +148,19 @@ export const WalletController = {
     next: NextFunction
   ) => {
     try {
-      const user = req.user;
-      if (!user)
-        throw new AppError(httpStatus.UNAUTHORIZED, "User not authenticated");
+      const userId = (req.user as { userId: string }).userId;
 
+      // Find all transactions where the user is either the sender or receiver
       const transactions = await Transaction.find({
-        $or: [{ from: user.userId }, { to: user.userId }],
+        $or: [{ from: userId }, { to: userId }],
       })
-        .populate("from", "name phone")
-        .populate("to", "name phone")
-        .sort({ timestamp: -1 });
+        .populate("from", "phone") // Optional: populate phone number of sender
+        .populate("to", "phone") // Optional: populate phone number of receiver
+        .sort({ createdAt: -1 }); // Newest first
 
       res.status(httpStatus.OK).json({
         success: true,
+        message: "Transaction history fetched successfully",
         data: transactions,
       });
     } catch (error) {

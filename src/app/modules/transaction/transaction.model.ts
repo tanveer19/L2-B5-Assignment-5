@@ -1,29 +1,33 @@
-import { Schema, model, Types } from "mongoose";
+// transaction.model.ts
+import mongoose from "mongoose";
 
-export interface ITransaction {
-  from: Types.ObjectId | null; // null for system credits
-  to: Types.ObjectId;
-  amount: number;
-  type: "SEND" | "RECEIVE" | "CREDIT" | "DEBIT";
-  timestamp: Date;
-}
-
-const transactionSchema = new Schema<ITransaction>(
+const transactionSchema = new mongoose.Schema(
   {
-    from: { type: Schema.Types.ObjectId, ref: "Wallet", default: null },
-    to: { type: Schema.Types.ObjectId, ref: "Wallet", required: true },
-    amount: { type: Number, required: true },
     type: {
       type: String,
-      enum: ["SEND", "RECEIVE", "CREDIT", "DEBIT"],
+      enum: ["SEND", "ADD", "WITHDRAW"],
       required: true,
     },
-    timestamp: { type: Date, default: Date.now },
+    from: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", // THIS MUST MATCH your User model name
+    },
+    to: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", // SAME HERE
+    },
+    amount: {
+      type: Number,
+      required: true,
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now,
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-export const Transaction = model<ITransaction>(
-  "Transaction",
-  transactionSchema
-);
+export const Transaction = mongoose.model("Transaction", transactionSchema);
