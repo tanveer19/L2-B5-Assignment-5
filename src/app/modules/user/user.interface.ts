@@ -16,6 +16,7 @@ export enum IsActive {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
   BLOCKED = "BLOCKED",
+  SUSPENDED = "SUSPENDED",
 }
 
 export interface IUser {
@@ -26,7 +27,7 @@ export interface IUser {
   phone?: string;
   picture?: string;
   address?: string;
-  isDeleted?: string;
+  isDeleted?: boolean;
   isActive?: IsActive;
   isVerified?: boolean;
   role: Role;

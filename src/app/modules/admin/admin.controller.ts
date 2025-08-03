@@ -1,114 +1,138 @@
 import { Request, Response } from "express";
+import httpStatus from "http-status-codes";
+import { catchAsync } from "../../utils/catchAsync";
+import { sendResponse } from "../../utils/sendResponse";
 import { User } from "../user/user.model";
 import { Wallet } from "../wallet/wallet.model";
-import { Transaction } from "../transaction/transaction.model";
-import { sendResponse } from "../../utils/sendResponse";
-import httpStatus from "http-status-codes";
+import { Transaction } from "../transaction/transaction.model"; // Update path as needed
 import AppError from "../../errorHelpers/AppError";
+import { IsActive, Role } from "../user/user.interface";
 
-const getAllUsers = async (req: Request, res: Response) => {
-  const users = await User.find({ role: "USER" });
+// View all users
+const getAllUsers = catchAsync(async (_req: Request, res: Response) => {
+  const users = await User.find({ role: Role.USER });
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: "All users retrieved successfully",
+    message: "Fetched all users",
     data: users,
   });
-};
+});
 
-const getAllAgents = async (req: Request, res: Response) => {
-  const agents = await User.find({ role: "AGENT" });
+// View all agents
+const getAllAgents = catchAsync(async (_req: Request, res: Response) => {
+  const agents = await User.find({ role: Role.AGENT });
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: "All agents retrieved successfully",
+    message: "Fetched all agents",
     data: agents,
   });
-};
+});
 
-const getAllWallets = async (req: Request, res: Response) => {
+// View all wallets
+const getAllWallets = catchAsync(async (_req: Request, res: Response) => {
   const wallets = await Wallet.find().populate("user");
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: "All wallets retrieved successfully",
+    message: "Fetched all wallets",
     data: wallets,
   });
-};
+});
 
-const getAllTransactions = async (req: Request, res: Response) => {
-  const transactions = await Transaction.find().populate("user");
+// View all transactions
+const getAllTransactions = catchAsync(async (_req: Request, res: Response) => {
+  const transactions = await Transaction.find().populate("from to");
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: "All transactions retrieved successfully",
+    message: "Fetched all transactions",
     data: transactions,
   });
-};
+});
 
-const blockWallet = async (req: Request, res: Response) => {
-  const { walletId } = req.params;
-  const wallet = await Wallet.findById(walletId);
-  if (!wallet) throw new AppError(httpStatus.NOT_FOUND, "Wallet not found");
-
-  wallet.isBlocked = true;
-  await wallet.save();
-
-  sendResponse(res, {
-    success: true,
-    statusCode: httpStatus.OK,
-    message: "Wallet blocked successfully",
-    data: wallet,
-  });
-};
-
-const unblockWallet = async (req: Request, res: Response) => {
-  const { walletId } = req.params;
-  const wallet = await Wallet.findById(walletId);
-  if (!wallet) throw new AppError(httpStatus.NOT_FOUND, "Wallet not found");
-
-  wallet.isBlocked = false;
-  await wallet.save();
+// Block wallet
+const blockWallet = catchAsync(async (req: Request, res: Response) => {
+  const wallet = await Wallet.findById(req.params.walletId);
+  if (!wallet) {
+    throw new AppError(httpStatus.NOT_FOUND, "Wallet not found");
+  }
+  const user = await User.findById(wallet.user);
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+  user.isActive = IsActive.BLOCKED;
+  await user.save();
 
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: "Wallet unblocked successfully",
-    data: wallet,
+    message: "Wallet blocked",
+    data: user,
   });
-};
+});
 
-const approveAgent = async (req: Request, res: Response) => {
-  const { agentId } = req.params;
-  const agent = await User.findOne({ _id: agentId, role: "AGENT" });
-  if (!agent) throw new AppError(httpStatus.NOT_FOUND, "Agent not found");
+// Unblock wallet
+const unblockWallet = catchAsync(async (req: Request, res: Response) => {
+  const wallet = await Wallet.findById(req.params.walletId);
+  if (!wallet) {
+    throw new AppError(httpStatus.NOT_FOUND, "Wallet not found");
+  }
+  const user = await User.findById(wallet.user);
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+  user.isActive = IsActive.ACTIVE;
+  await user.save();
 
-  agent.isActive = "ACTIVE";
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Wallet unblocked",
+    data: user,
+  });
+});
+
+// Approve agent
+const approveAgent = catchAsync(async (req: Request, res: Response) => {
+  const agent = await User.findOne({
+    _id: req.params.agentId,
+    role: Role.AGENT,
+  });
+  if (!agent) {
+    throw new AppError(httpStatus.NOT_FOUND, "Agent not found");
+  }
+  agent.isActive = IsActive.ACTIVE;
   await agent.save();
 
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: "Agent approved successfully",
+    message: "Agent approved",
     data: agent,
   });
-};
+});
 
-const suspendAgent = async (req: Request, res: Response) => {
-  const { agentId } = req.params;
-  const agent = await User.findOne({ _id: agentId, role: "AGENT" });
-  if (!agent) throw new AppError(httpStatus.NOT_FOUND, "Agent not found");
-
-  agent.isActive = "SUSPENDED";
+// Suspend agent
+const suspendAgent = catchAsync(async (req: Request, res: Response) => {
+  const agent = await User.findOne({
+    _id: req.params.agentId,
+    role: Role.AGENT,
+  });
+  if (!agent) {
+    throw new AppError(httpStatus.NOT_FOUND, "Agent not found");
+  }
+  agent.isActive = IsActive.BLOCKED;
   await agent.save();
 
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: "Agent suspended successfully",
+    message: "Agent suspended",
     data: agent,
   });
-};
+});
 
 export const AdminController = {
   getAllUsers,

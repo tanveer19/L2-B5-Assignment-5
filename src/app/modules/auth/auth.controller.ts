@@ -6,8 +6,8 @@ import { AuthServices } from "./auth.service";
 import AppError from "../../errorHelpers/AppError";
 import { setAuthCookie } from "../../utils/setCookie";
 import { createUserTokens } from "../../utils/userTokens";
-import { envVars } from "../../config/env";
 import { JwtPayload } from "jsonwebtoken";
+import { IUser } from "../user/user.interface";
 
 const credentialsLogin = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -38,7 +38,7 @@ const credentialsLogin = catchAsync(
     }
 
     // Generate access + refresh tokens
-    const userTokens = await createUserTokens(user as IUser);
+    const userTokens = await createUserTokens(user.toObject() as IUser);
 
     // Remove password from response
     const { password: _, ...rest } = user.toObject();
