@@ -18,10 +18,15 @@ app.use(
     saveUninitialized: false,
   })
 );
-
 app.use(cookieParser());
 app.use(express.json());
-app.use(cors());
+app.set("trust proxy", 1);
+app.use(
+  cors({
+    origin: envVars.FRONTEND_URL,
+    credentials: true, // optional if you’re sending cookies or auth headers
+  })
+);
 
 app.use("/api/v1/user", UserRoutes);
 app.use("/api/v1/auth", AuthRoutes);
