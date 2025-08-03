@@ -96,11 +96,10 @@ pnpm dev
 
 🧑‍💼 Agents
 
-| Method | Endpoint              | Description                 |
-| ------ | --------------------- | --------------------------- |
-| POST   | `/agent/cash-in`      | Add money to user's wallet  |
-| POST   | `/agent/cash-out`     | Withdraw from user's wallet |
-| GET    | `/agent/transactions` | View own transactions       |
+| Method | Endpoint          | Description                 |
+| ------ | ----------------- | --------------------------- |
+| POST   | `/agent/cash-in`  | Add money to user's wallet  |
+| POST   | `/agent/cash-out` | Withdraw from user's wallet |
 
 👮 Admins
 
