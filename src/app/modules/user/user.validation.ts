@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { IsActive, Role } from "./user.interface";
 
 // Assuming Role = 'admin' | 'user' | 'agent' and IsActive = 'active' | 'inactive'
 const RoleEnum = z.enum(["ADMIN", "USER", "AGENT"]);

@@ -1,14 +1,9 @@
 import AppError from "../../errorHelpers/AppError";
-import { IsActive, IUser } from "../user/user.interface";
 import httpStatus from "http-status-codes";
 import { User } from "../user/user.model";
 import bcryptjs from "bcryptjs";
-import { generateToken, verifyToken } from "../../utils/jwt";
 import { envVars } from "../../config/env";
-import {
-  createNewAccessTokenWithRefreshToken,
-  createUserTokens,
-} from "../../utils/userTokens";
+import { createNewAccessTokenWithRefreshToken } from "../../utils/userTokens";
 import { JwtPayload } from "jsonwebtoken";
 
 const findUserByPhone = async (phone: string) => {
