@@ -1,8 +1,11 @@
-💳 Wallet Management System API
+# 💳 Wallet Management System API
+
 A secure role-based digital wallet management system built using Node.js, Express, MongoDB, and TypeScript. Supports three roles: Admin, User, and Agent.
 
-🚀 Features
-✅ Authentication
+# 🚀 Features
+
+Authentication
+
 JWT-based login system
 
 Secure password hashing using bcrypt
@@ -45,7 +48,8 @@ Role and status checks before every action
 
 Wallets are blocked if user is blocked
 
-🛠️ Tech Stack
+# 🛠️ Tech Stack
+
 Backend Framework: Express.js
 
 Language: TypeScript
